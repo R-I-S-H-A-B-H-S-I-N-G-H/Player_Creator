@@ -1,0 +1,13 @@
+.container {
+	/* background: lightblue; */
+	display: flex;
+	flex-direction: column;
+	width: 60%;
+}
+.outstreamBtn {
+	padding: 0.5rem;
+	border: none;
+	border: darkgreen solid 2px;
+	border-radius: 0.2rem;
+	cursor: pointer;
+}
