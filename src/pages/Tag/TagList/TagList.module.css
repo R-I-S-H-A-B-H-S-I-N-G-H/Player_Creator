@@ -1,0 +1,28 @@
+.itemContainer {
+	padding: 0.5rem;
+	border: solid 2px darkcyan;
+	margin: 0.2rem;
+	border-radius: 0.3rem;
+	background-color: lightgreen;
+	font-weight: 600;
+	display: grid;
+	grid-template-columns: 3fr 1fr 2fr 2fr 1fr; /* Adjust the number of columns as needed */
+	gap: 10px; /* Adjust the gap between grid items as needed */
+}
+
+.name {
+	cursor: pointer;
+	font-weight: bold;
+}
+.shortId,
+.preview {
+	cursor: pointer;
+}
+.createdAt {
+}
+.updatedAt {
+}
+
+.itemContainer:hover {
+	background: rgb(120, 214, 120);
+}

@@ -12,3 +12,11 @@ export function getUrlParamVal(_url, key) {
 export function getCurUrl() {
 	return window.location.href;
 }
+
+export function mapToQueryParams(params) {
+	return Object.keys(params)
+		.map(
+			(key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`,
+		)
+		.join("&");
+}

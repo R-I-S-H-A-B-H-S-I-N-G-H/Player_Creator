@@ -14,6 +14,7 @@ function Tag() {
 	const navigate = useNavigate();
 
 	const { shortId } = useParams();
+	const { name } = tag.value;
 	const { adSetting, mainVideoSetting, viewability } =
 		tag.value.playerConfig.playerConfig;
 
@@ -25,6 +26,7 @@ function Tag() {
 					return;
 				}
 				tag.value = { ...res };
+				console.log(tag.value);
 			});
 	}, []);
 
@@ -65,6 +67,12 @@ function Tag() {
 		tag.value = { ...newVal };
 	}
 
+	function updateTagConfig(key, val) {
+		const newVal = tag.value;
+		newVal[key] = val;
+		tag.value = { ...newVal };
+	}
+
 	async function _createTag(tagPayload) {
 		if (isOutStream.value)
 			delete tagPayload.playerConfig.playerConfig.mainVideoSetting;
@@ -86,7 +94,7 @@ function Tag() {
 	}
 
 	return (
-		<>
+		<div>
 			<button onClick={() => (isOutStream.value = !isOutStream.value)}>
 				CHANGE TO {isOutStream ? "INSTREAM" : "OUTSTREAM"}
 			</button>
@@ -99,6 +107,12 @@ function Tag() {
 			</button>
 
 			<div className={style.rollContainer}>
+				<input
+					value={name || ""}
+					onChange={(e) => updateTagConfig("name", e.target.value)}
+					placeholder="TAG NAME"
+				></input>
+
 				{!isOutStream.value && (
 					<input
 						value={mainVideoSetting?.url || ""}
@@ -143,7 +157,7 @@ function Tag() {
 			</div>
 
 			{tag.value._id && <button onClick={goToPreview}>GO TO PREVIEW</button>}
-		</>
+		</div>
 	);
 }
 
