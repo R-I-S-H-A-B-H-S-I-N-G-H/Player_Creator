@@ -11,3 +11,10 @@
 	border-radius: 0.2rem;
 	cursor: pointer;
 }
+.rollContainer {
+	display: flex;
+	flex-direction: column;
+}
+.rollContainer > input {
+	padding: 0.5rem;
+}

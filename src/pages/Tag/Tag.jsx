@@ -1,98 +1,110 @@
-import { useRef } from "react";
-import { createTagURL } from "../../../utils/tagUtil";
+import { useEffect } from "react";
 import style from "./Tag.module.css";
-import { signal } from "@preact/signals-react";
 import DefaultTagConfig from "./DefaultTagConfig";
+import { signal } from "@preact/signals-react";
+import { createTag, getTagByShortId } from "../../Api/TagApi";
+import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const tagUrl = signal("");
+const tag = signal({ playerConfig: DefaultTagConfig });
 const isOutStream = signal(true);
-
 function Tag() {
-	const tagConfig = useRef(DefaultTagConfig);
-	async function generateTagUrl(_tagProps) {
-		const _tagUrlResp = await createTagURL(_tagProps);
-		tagUrl.value = _tagUrlResp;
+	const navigate = useNavigate();
+
+	const { shortId } = useParams();
+	const { adSetting, mainVideoSetting } = tag.value.playerConfig.playerConfig;
+
+	useEffect(() => {
+		if (shortId)
+			getTagByShortId(shortId).then((res) => {
+				if (!res) {
+					goToTagCreate();
+					return;
+				}
+				tag.value = { ...res };
+			});
+	}, []);
+
+	function updatePreroll(key, val) {
+		const newVal = tag.value;
+		newVal.playerConfig.playerConfig.adSetting.preRoll =
+			newVal.playerConfig.playerConfig.adSetting.preRoll || {};
+		newVal.playerConfig.playerConfig.adSetting.preRoll[key] = val;
+		tag.value = { ...newVal };
+	}
+	function updateMidroll(key, val) {
+		const newVal = tag.value;
+		newVal.playerConfig.playerConfig.adSetting.midRoll =
+			newVal.playerConfig.playerConfig.adSetting.midRoll || {};
+		newVal.playerConfig.playerConfig.adSetting.midRoll[key] = val;
+		tag.value = { ...newVal };
+	}
+	function updatePostroll(key, val) {
+		const newVal = tag.value;
+		newVal.playerConfig.playerConfig.adSetting.postRoll =
+			newVal.playerConfig.playerConfig.adSetting.postRoll || {};
+		newVal.playerConfig.playerConfig.adSetting.postRoll[key] = val;
+		tag.value = { ...newVal };
+	}
+	function updateBaseVideo(key, val) {
+		const newVal = tag.value;
+		newVal.playerConfig.playerConfig.mainVideoSetting =
+			newVal.playerConfig.playerConfig.mainVideoSetting || {};
+		newVal.playerConfig.playerConfig.mainVideoSetting[key] = val;
+		tag.value = { ...newVal };
 	}
 
-	function updateMainVideoSetting(key, val) {
-		tagConfig.current.playerConfig.mainVideoSetting = {
-			...tagConfig.current.playerConfig.mainVideoSetting,
-			[key]: val,
-		};
-		console.log(tagConfig.current);
+	async function _createTag(tagPayload) {
+		const tagRes = await createTag(tagPayload);
+		if (tagRes) tag.value = { ...tagRes };
+		console.log("TAG :: ", tagRes);
 	}
 
-	function updatePreRoll(key, val) {
-		if (isOutStream.value) {
-			delete tagConfig.current.playerConfig.mainVideoSetting;
-		}
-		tagConfig.current.playerConfig.adSetting.preRoll = {
-			...tagConfig.current.playerConfig.adSetting.preRoll,
-			[key]: val,
-		};
-		console.log(tagConfig.current);
+	function goToPreview() {
+		navigate(`/tag/preview/${shortId}`);
 	}
-	function updateMidRoll(key, val) {
-		tagConfig.current.playerConfig.adSetting.preRoll = {
-			...tagConfig.current.playerConfig.adSetting.preRoll,
-			[key]: val,
-		};
-		console.log(tagConfig.current);
-	}
-	function updatePostRoll(key, val) {
-		tagConfig.current.playerConfig.adSetting.preRoll = {
-			...tagConfig.current.playerConfig.adSetting.preRoll,
-			[key]: val,
-		};
-		console.log(tagConfig.current);
+	function goToTagCreate() {
+		navigate(`/tag/create`);
 	}
 
 	return (
-		<div className={style.container}>
-			<div>
-				<button
-					className={style.outstreamBtn}
-					onClick={() => (isOutStream.value = !isOutStream.value)}
-				>
-					CHANGE TO {isOutStream.value ? "INSTREAM" : "OUTSTREAM"}
-				</button>
-			</div>
-
-			{!isOutStream.value && (
-				<div>
-					<div>MAIN VIDEO SETTINGS</div>
-					<label>URL</label>
-					<input
-						onInput={(e) => updateMainVideoSetting("url", e.target.value)}
-					></input>
-				</div>
-			)}
-
-			<div>
-				<div>AD VIDEO SETTINGS</div>
-				<label>PREROLL-URL</label>
-				<input onInput={(e) => updatePreRoll("url", e.target.value)}></input>
-				{!isOutStream.value && (
-					<>
-						<label>MIDROLL-URL</label>
-						<input
-							onInput={(e) => updateMidRoll("url", e.target.value)}
-						></input>
-						<label>POSTROLL-URL</label>
-						<input
-							onInput={(e) => updatePostRoll("url", e.target.value)}
-						></input>
-					</>
-				)}
-			</div>
-
-			<button onClick={() => generateTagUrl(tagConfig.current)}>
-				GENERATE TAG URL
+		<>
+			<button onClick={() => (isOutStream.value = !isOutStream.value)}>
+				CHANGE TO {isOutStream ? "INSTREAM" : "OUTSTREAM"}
 			</button>
-			<a href={tagUrl.value} target="_blank" rel="noreferrer">
-				{tagUrl.value}
-			</a>
-		</div>
+			<div className={style.rollContainer}>
+				{!isOutStream.value && (
+					<input
+						value={mainVideoSetting?.url || ""}
+						onChange={(e) => updateBaseVideo("url", e.target.value)}
+						placeholder="BASE VIDEO URL"
+					></input>
+				)}
+				<input
+					value={adSetting?.preRoll?.url || ""}
+					placeholder="PREROLL URL"
+					onChange={(e) => updatePreroll("url", e.target.value)}
+				></input>
+				{!isOutStream.value && (
+					<input
+						value={adSetting?.midRoll?.url || ""}
+						onChange={(e) => updateMidroll("url", e.target.value)}
+						placeholder="MID ROLL URL"
+					></input>
+				)}
+				{!isOutStream.value && (
+					<input
+						value={adSetting?.postRoll?.url || ""}
+						onChange={(e) => updatePostroll("url", e.target.value)}
+						placeholder="POST ROLL URL"
+					></input>
+				)}
+
+				<button onClick={() => _createTag(tag.value)}>CREATE TAG</button>
+			</div>
+
+			{tag.value._id && <button onClick={goToPreview}>GO TO PREVIEW</button>}
+		</>
 	);
 }
 

@@ -8,3 +8,7 @@ export function getUrlParamVal(_url, key) {
 	const url = new URL(_url);
 	return url.searchParams.get(key);
 }
+
+export function getCurUrl() {
+	return window.location.href;
+}

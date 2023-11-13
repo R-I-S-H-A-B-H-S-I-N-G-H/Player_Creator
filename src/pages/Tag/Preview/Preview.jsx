@@ -1,11 +1,13 @@
-import React, { useEffect, useRef } from "react";
-import { getShortId } from "../../../../utils/shortidUtil";
+import { useEffect, useRef } from "react";
 import { getUrlParamVal } from "../../../../utils/utils";
 import { getTagByShortId } from "../../../../utils/tagUtil";
+import { useParams } from "react-router-dom";
 
 function Preview(props) {
+	const { shortId } = useParams();
+	const resizeIframeInterVal = useRef();
 	function playTag() {
-		const tagShortId = getUrlParamVal(window.location.href, "tagId");
+		const tagShortId = shortId;
 		const tagUrl = getTagByShortId(tagShortId);
 
 		const scrptTag = document.createElement("script");
@@ -16,17 +18,23 @@ function Preview(props) {
 	useEffect(() => {
 		// playTag();
 		loadScriptInIframe();
-		setInterval(() => {
+		if (resizeIframeInterVal.current)
+			clearInterval(resizeIframeInterVal.current);
+		resizeIframeInterVal.current = setInterval(() => {
 			const iframe = document.getElementById("myIframe");
 			const height = iframe.contentDocument.body.scrollHeight;
 			const width = iframe.contentDocument.body.scrollWidth;
 			iframe.width = width;
 			iframe.height = height;
 		}, 1000);
+
+		return () => {
+			clearInterval(resizeIframeInterVal.current);
+		};
 	}, []);
 
 	function loadScriptInIframe() {
-		const tagShortId = getUrlParamVal(window.location.href, "tagId");
+		const tagShortId = shortId;
 		const tagUrl = getTagByShortId(tagShortId);
 
 		// Get the iframe element
