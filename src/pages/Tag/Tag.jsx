@@ -8,11 +8,14 @@ import { useNavigate } from "react-router-dom";
 
 const tag = signal({ playerConfig: DefaultTagConfig });
 const isOutStream = signal(true);
+const advanceSettingStatus = signal(false);
+
 function Tag() {
 	const navigate = useNavigate();
 
 	const { shortId } = useParams();
-	const { adSetting, mainVideoSetting } = tag.value.playerConfig.playerConfig;
+	const { adSetting, mainVideoSetting, viewability } =
+		tag.value.playerConfig.playerConfig;
 
 	useEffect(() => {
 		if (shortId)
@@ -54,9 +57,21 @@ function Tag() {
 		tag.value = { ...newVal };
 	}
 
+	function updateViewability(key, val) {
+		const newVal = tag.value;
+		newVal.playerConfig.playerConfig.viewability =
+			newVal.playerConfig.playerConfig.viewability || {};
+		newVal.playerConfig.playerConfig.viewability[key] = val;
+		tag.value = { ...newVal };
+	}
+
 	async function _createTag(tagPayload) {
+		if (isOutStream.value)
+			delete tagPayload.playerConfig.playerConfig.mainVideoSetting;
 		const tagRes = await createTag(tagPayload);
-		if (tagRes) tag.value = { ...tagRes };
+		if (!tagRes) return;
+		tag.value = { ...tagRes };
+		goToTagId(tag.value.shortId);
 		console.log("TAG :: ", tagRes);
 	}
 
@@ -66,12 +81,23 @@ function Tag() {
 	function goToTagCreate() {
 		navigate(`/tag/create`);
 	}
+	function goToTagId(shortId) {
+		navigate(`/tag/${shortId}`);
+	}
 
 	return (
 		<>
 			<button onClick={() => (isOutStream.value = !isOutStream.value)}>
 				CHANGE TO {isOutStream ? "INSTREAM" : "OUTSTREAM"}
 			</button>
+			<button
+				onClick={() =>
+					(advanceSettingStatus.value = !advanceSettingStatus.value)
+				}
+			>
+				{advanceSettingStatus.value ? "DISABLE" : "ENABLE"} ADVANCE SETTINGS
+			</button>
+
 			<div className={style.rollContainer}>
 				{!isOutStream.value && (
 					<input
@@ -98,6 +124,19 @@ function Tag() {
 						onChange={(e) => updatePostroll("url", e.target.value)}
 						placeholder="POST ROLL URL"
 					></input>
+				)}
+
+				{advanceSettingStatus.value && (
+					<>
+						<input
+							type="number"
+							value={viewability.val || 50}
+							onChange={(e) =>
+								updateViewability("val", parseInt(e.target.value))
+							}
+							placeholder="VIEWABILITY"
+						></input>
+					</>
 				)}
 
 				<button onClick={() => _createTag(tag.value)}>CREATE TAG</button>
